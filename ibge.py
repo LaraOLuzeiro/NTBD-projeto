@@ -1,53 +1,7 @@
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.chrome.service import Service
-# from webdriver_manager.chrome import ChromeDriverManager
-# import time
-
-# # Inicializar WebDriver
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
-# # Acessa a página do IBGE
-# driver.get('https://www.ibge.gov.br/explica/codigos-dos-municipios.php')
-
-# # Aguarda o carregamento da página
-# time.sleep(5)  # Ajuste o tempo conforme necessário
-
-# # Lista para armazenar os nomes das cidades com a UF
-# cidades_com_uf = []
-
-# # Encontra todas as tabelas de municípios
-# tabelas = driver.find_elements(By.CSS_SELECTOR, "tbody.codigos-list")
-
-# # Itera sobre as tabelas e coleta os nomes das cidades com a UF
-# for tabela in tabelas:
-#     # Encontra o <thead> anterior à tabela atual para obter a UF
-#     thead = tabela.find_element(By.XPATH, "./preceding-sibling::thead[1]")
-#     uf = thead.get_attribute("id")  # O ID do <thead> é a sigla da UF
-    
-#     # Itera sobre as linhas da tabela para coletar os nomes das cidades
-#     linhas = tabela.find_elements(By.CSS_SELECTOR, "tr.municipio.data-line")
-#     for linha in linhas:
-#         cidade = linha.find_element(By.CSS_SELECTOR, "td > a").text
-#         cidades_com_uf.append(f"{uf}_{cidade}")
-
-# # Fecha o navegador
-# driver.quit()
-
-# # Exibe os nomes das cidades com a UF
-# for cidade_uf in cidades_com_uf:
-#     print(cidade_uf)
-
-# # Salva os nomes das cidades com a UF em um arquivo (opcional)
-# with open("cidades_ibge_com_uf.txt", "w") as arquivo:
-#     for cidade_uf in cidades_com_uf:
-#         arquivo.write(cidade_uf + "\n")
-
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import psycopg2
-from sqlalchemy import create_engine
 
 # Função para mapear o código da UF para a região
 def get_region_by_code(uf_code):
@@ -67,7 +21,7 @@ def get_region_by_code(uf_code):
 def scrape_ibge_states():
     url = "https://www.ibge.gov.br/explica/codigos-dos-municipios.php"
     response = requests.get(url)
-    response.raise_for_status()  # Verifica se a requisição foi bem-sucedida
+    response.raise_for_status()  
     
     soup = BeautifulSoup(response.text, "html.parser")
     table = soup.find("tbody", class_="codigos-list")
@@ -93,19 +47,55 @@ def scrape_ibge_states():
     return df
 
 # Função para inserir os dados no banco de dados
-def insert_data_into_db(df):
-    # Conexão com o banco de dados PostgreSQL
-    connection_string = "postgresql://username:password@localhost:5432/database_name"  # Substitua pelos seus dados de conexão
-    engine = create_engine(connection_string)
+def generate_insert_statements(df, table_name):
+    # Lista para armazenar os comandos INSERT
+    insert_statements = []
 
-    # Inserindo os dados no banco de dados
-    df.to_sql('Dimensao_Local', engine, if_exists='append', index=False)
+    # Itera sobre as linhas do DataFrame
+    for index, row in df.iterrows():
+        # Cria a lista de valores a serem inseridos
+        values = ', '.join([f"'{str(value)}'" for value in row])
+        
+        # Cria o comando INSERT INTO
+        insert_statement = f"INSERT INTO {table_name} ({', '.join(df.columns)}) VALUES ({values});"
+        
+        # Adiciona o comando à lista
+        insert_statements.append(insert_statement)
+    
+    return insert_statements
+
+def insert_data_into_db(df, table_name):
+    # Conexão com o banco de dados PostgreSQL
+    connection_string = "postgresql://postgres:lara14ufscar@localhost:5432/Conab_DW"
+    
+    # Conectando ao banco de dados
+    conn = psycopg2.connect(connection_string)
+    cursor = conn.cursor()
+
+    # Gerar os comandos INSERT
+    insert_statements = generate_insert_statements(df, table_name)
+
+    # Executar cada comando INSERT
+    for statement in insert_statements:
+        try:
+            cursor.execute(statement)
+            conn.commit()  # Confirma a transação
+        except Exception as e:
+            print(f"Erro ao inserir dados: {e}")
+            conn.rollback()  # Desfaz a transação em caso de erro
+
+    # Fechar a conexão
+    cursor.close()
+    conn.close()
+
 
 if __name__ == "__main__":
     # Scrape dos dados
     df = scrape_ibge_states()
+
+    print(df.head())  # Exibir as primeiras linhas do DataFrame
     
     # Inserção no banco de dados
-    insert_data_into_db(df)
+    insert_data_into_db(df, 'Dimensao_Local')
     
     print("Dados inseridos com sucesso!")
