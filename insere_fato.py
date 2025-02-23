@@ -23,7 +23,7 @@ try:
 
     # Ler arquivo CSV que contém os dados brutos e puxar os dados das
     # Dimensões para inserir na tabela de fato
-    with open('TESTE.csv', 'r', encoding='utf-8') as arquivo_csv:
+    with open('produtos_final.csv', 'r', encoding='utf-8') as arquivo_csv:
         leitor = csv.reader(arquivo_csv)
 
         next(leitor) # Pula a primeira linha (cabeçalho)

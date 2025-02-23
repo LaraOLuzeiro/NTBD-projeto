@@ -7,21 +7,54 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+# Função para carregar uma página com tratamento de exceções (caso internet caia por exemplo)
+def carregar_pagina(url, delay=10):
+    while True:
+        try:
+            driver.get(url)
+            return
+        except Exception as e:
+            print(f"Erro ao carregar a página {url}: {e}. Tentando novamente em {delay} segundos...")
+            time.sleep(delay)
+
+# Função para clicar em um elemento com tratamento de exceções (caso internet caia por exemplo)
+def clicar_elemento(by, localizador_elemento, delay=10, descricao=""):
+    while True:
+        try:
+            element = wait.until(EC.element_to_be_clickable((by, localizador_elemento)))
+            driver.execute_script("arguments[0].scrollIntoView(true);", element)
+            element.click()
+            return
+        except Exception as e:
+            print(f"Erro ao clicar em {descricao}: {e}. Tentando novamente em {delay} segundos...")
+            time.sleep(delay)
+
+# Função para encontrar elementos com tratamento de exceções (caso internet caia por exemplo)
+def encontrar_elemento(by, locator, delay=10, description=""):
+    while True:
+        try:
+            elements = driver.find_elements(by, locator)
+            if elements:
+                return elements
+            else:
+                raise Exception("Nenhum elemento encontrado.")
+        except Exception as e:
+            print(f"Erro ao localizar elementos {description}: {e}. Tentando novamente em {delay} segundos...")
+            time.sleep(delay)
+
 # Inicializa o WebDriver com o webdriver_manager
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 10)
 
-driver.get('https://consultaprecosdemercado.conab.gov.br/#/home')
-time.sleep(2)
+carregar_pagina('https://consultaprecosdemercado.conab.gov.br/#/home')
 
 # Seleciona preços mensais
-botao_preco_mensal = driver.find_element(By.XPATH, "//button[.//i[contains(@class, 'fa-th-large')]]")
-botao_preco_mensal.click()
+clicar_elemento(By.XPATH, "//button[.//i[contains(@class, 'fa-th-large')]]", descricao="botão de preços mensais")
 
 # Selecionando períodos para consultar
 periodos = [
-    (0, 11, 11, 8),  # Jan/2014 - Dez/2017
-    (0, 7, 11, 4),   # Jan/2018 - Dez/2021
+    #(0, 11, 11, 8),  # Jan/2014 - Dez/2017 # COMENTEI AQUI PARA PEGAR A PROXIMA DATA, ALTERAR DEPOIS ##############################################################################################################################
+    #(0, 7, 11, 4),   # Jan/2018 - Dez/2021 # COMENTEI AQUI PARA PEGAR A PROXIMA DATA, ALTERAR DEPOIS ##############################################################################################################################
     (0, 3, 0, 0)   # Jan/2022 - Jan/2025
 ]
 
@@ -31,50 +64,76 @@ insert_statements = []
 # Nome da tabela no banco de dados
 table_name = "Dimensao_Produto"
 
-with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO ESQUECER DE MUDAR O NOME DO ARQUIVO, EU MUDEI PRA TESTE SÓ PRA TESTAR UHHRR DUURRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+# Conjunto auxiliar para verificar e evitar inserções duplicadas no arquivo de insert de produtos
+produtos_inseridos = set() 
+
+count = 0 # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS ########################################################################################################################################################################################################################################################################################################################
+
+
+# APAGAR ISSO, FOI NECESSÁRIO PARA REPREENCHER A TABELA DE PRODUTOS, POIS TIVE QUE REINICIAR O PROGRAMA, MAS NÃO SERÁ NECESSÁRIO PARA O PROJETO FINAL SE ELE CONSEGUIR FAZER A TROCA DE DATA SOZINHO ###################################################################################################################
+import os 
+import re
+if os.path.exists("insert_dimensao_produto_final.sql"):
+    with open("insert_dimensao_produto_final.sql", "r", encoding="utf-8") as file:
+        for linha in file:
+            # A expressão regular captura os valores entre aspas após VALUES
+            match = re.search(r"VALUES \('(.+?)', '(.+?)'\);", linha)
+            if match:
+                produto, categoria = match.group(1), match.group(2)
+                produtos_inseridos.add((produto, categoria))
+                print(produto, categoria)
+
+#########################################################################################################################################################################################################################################################################################################################################################################################################
+
+
+with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as arquivo:  # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PRGORAMA FUNCIONE SEM PRECISAR TROCAR A DATA #######################################################################################################################################################################################################
     writer = csv.writer(arquivo)
-    writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes", "ano", "preco_medio"])
+    #writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes", "ano", "preco_medio"]) # DESCOMENTAR AQUI, POIS ESTAVA INSERINDO NOVAMENTE O CABEÇALHO, JÁ QUE TIVE QUE REINICIAR O PROGRAMA ##########################################################################################################################################################################################
 
     for periodo_mes_inicial, periodo_ano_inicial, periodo_mes_final, periodo_ano_final in periodos:
 
         # Selecionar o mês inicial 
-        mes_inicial_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "mesInicial")))
-        mes_inicial_dropdown.click()
-        mes_inicial = wait.until(EC.element_to_be_clickable((By.XPATH, f"//label[@for='mesInicial{periodo_mes_inicial}']")))  
-        mes_inicial.click()
+        clicar_elemento(By.ID, "mesInicial", descricao="dropdown de mês inicial")
+        clicar_elemento(By.XPATH, f"//label[@for='mesInicial{periodo_mes_inicial}']", descricao="mês inicial")
 
         # Selecionar o ano inicial 
-        ano_inicial_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "anoInicial")))
-        ano_inicial_dropdown.click()
-        ano_inicial = wait.until(EC.element_to_be_clickable((By.XPATH, f"//label[@for='anoInicial{periodo_ano_inicial}']")))  
-        ano_inicial.click()
+        clicar_elemento(By.ID, "anoInicial", descricao="dropdown de ano inicial")  
+        clicar_elemento(By.XPATH, f"//label[@for='anoInicial{periodo_ano_inicial}']", descricao="ano inicial")  
 
         # Selecionar o mês final 
-        mes_final_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "mesFinal")))
-        mes_final_dropdown.click()
-        mes_final = wait.until(EC.element_to_be_clickable((By.XPATH, f"//label[@for='mesFinal{periodo_mes_final}']")))  
-        mes_final.click()
+        clicar_elemento(By.ID, "mesFinal", descricao="dropdown de mês final") 
+        clicar_elemento(By.XPATH, f"//label[@for='mesFinal{periodo_mes_final}']", descricao="mês final")  
 
         # Selecionar o ano final 
-        ano_final_dropdown = wait.until(EC.element_to_be_clickable((By.ID, "anoFinal")))
-        ano_final_dropdown.click()
-        ano_final = wait.until(EC.element_to_be_clickable((By.XPATH, f"//label[@for='anoFinal{periodo_ano_final}']")))  
-        ano_final.click()
+        clicar_elemento(By.ID, "anoFinal", descricao="dropdown de ano final") 
+        clicar_elemento(By.XPATH, f"//label[@for='anoFinal{periodo_ano_final}']", descricao="ano final")  
 
         # Selecionando botões Pesquisar e Consultar
-        botao_pesquisar = driver.find_element(By.XPATH, "//button[contains(text(), 'Pesquisar')]")
-        botao_pesquisar.click()
+        clicar_elemento(By.XPATH, "//button[contains(text(), 'Pesquisar')]", descricao="botão Pesquisar")
         time.sleep(2)
-        botao_consultar = driver.find_element(By.XPATH, "//button[contains(text(), 'Consultar')]")
-        botao_consultar.click()
+        clicar_elemento(By.XPATH, "//button[contains(text(), 'Consultar')]", descricao="botão Consultar")  
         time.sleep(2)
 
         # Selecionando máximo de 100 resultados por página
-        botoes_selecao = driver.find_elements(By.XPATH, "//button[@aria-label='Exibir lista']")
-        botao_selecao = botoes_selecao[7]
-        botao_selecao.click()
-        botao_selecao = driver.find_element(By.CSS_SELECTOR, "label[for='per-page-selection-random5']")
-        botao_selecao.click()
+        while True: 
+            try:
+                botoes_selecao = encontrar_elemento(By.XPATH, "//button[@aria-label='Exibir lista']", description="botões Exibir lista")
+                if len(botoes_selecao) < 8:
+                    raise Exception("Quantidade insuficiente de botões de exibir lista.")
+                botoes_selecao[7].click()
+                break
+            except Exception as e:
+                print(f"Erro ao selecionar botão de exibir lista: {e}. Tentando novamente em 5 segundos...")
+                time.sleep(5)
+                
+        while True: 
+            try:
+                botao_selecao = driver.find_element(By.CSS_SELECTOR, "label[for='per-page-selection-random5']")
+                botao_selecao.click()
+                break
+            except Exception as e:
+                print(f"Erro ao selecionar botão de 100 resultados por página: {e}. Tentando novamente em 5 segundos...")
+                time.sleep(5)
 
         while True:
             try:
@@ -90,6 +149,10 @@ with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO E
                 produto_atual = None
                 nivel_atual = None
                 estado_atual = None
+                mes_ano = None
+                mes = None
+                ano = None
+                preco_medio = None
 
                 # Dicionário de siglas de UFs para passar UF para o nome completo
                 uf_map = {
@@ -128,14 +191,26 @@ with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO E
                     if colunas[0] == "" and colunas[1] == "" and colunas[2] == "" and colunas[3] == "" and colunas[4] =="":
                         continue  # Ignora linhas inesperadas
 
+                    # Lógica somente para não inserir o produto 10-30-15 (50 kg)
+                    elif colunas[0] == '10-30-15 (50 kg)' or produto_atual == '10-30-15 (50 kg)':
+                        if colunas[0] == "":
+                            produto_atual = None
+                            continue
+                        produto_atual = '10-30-15 (50 kg)'
+                        continue
+
                     # Apenas mes_ano e preco_medio, mantém os valores anteriores
                     elif colunas[0] == "" and colunas[1] == "" and colunas[2] == "":
                         mes_ano = colunas[3]
                         mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
                         mes = int(mes) # Serve para retirar o zero à esquerda
                         preco_medio = colunas[4]
-                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de compatibilidade com o PostgreSQL
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
+
+                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
+                        count += 1
+                        print(f'Produtos Inseridos: {count}/89.995')
 
                     # Apenas nivel, estado, mes_ano e preco_medio, mantém o valor do produto
                     elif colunas[0] == "":
@@ -146,23 +221,30 @@ with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO E
                         mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
                         mes = int(mes) # Serve para retirar o zero à esquerda
                         preco_medio = colunas[4]
-                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de compatibilidade com o PostgreSQL
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
+
+                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
+                        count += 1
+                        print(f'Produtos Inseridos: {count}/89.995')
 
                     # Nova linha completa, atualiza todos os campos
                     else:
                         produto_atual, nivel_atual, estado_atual, mes_ano, preco_medio = colunas
-                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de compatibilidade com o PostgreSQL
                         mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
                         mes = int(mes) # Serve para retirar o zero à esquerda                       
                         estado_atual = uf_map.get(estado_atual) # Converte a sigla do estado para o nome completo
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
+                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
+                        count += 1
+                        print(f'Produtos Inseridos: {count}/89.995')
+
                         # Pega todas as categorias existentes no arquivo 'categoria.txt'
                         with open("categoria.txt", "r", encoding="utf-8") as arquivo:
                             for numero_linha, linha in enumerate(arquivo, start=1):
                                 if linha.strip() in produto_atual:
-                                    # print(f"A string foi encontrada na linha {linha}")
                                     # Lendo o arquivo de categorias
                                     with open("categoria.txt", "r", encoding="utf-8") as file:
                                         categorias = [linha.strip().lower() for linha in file]  # Convertendo para minúsculas para evitar problemas de case
@@ -170,40 +252,41 @@ with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO E
                                     # Verificando se a categoria está contida no nome_atual
                                     for categoria in categorias:
                                         if categoria in produto_atual.lower():  # Verifica se a categoria é um subconjunto do nome
-                                            insert_statement = f"INSERT INTO {table_name} (nome_produto, cultura_especie) VALUES ('{produto_atual}', '{categoria}');"
-                                            insert_statements.append(insert_statement)
+                                            if(produto_atual, categoria) not in produtos_inseridos:
+                                                insert_statement = f"INSERT INTO {table_name} (nome_produto, cultura_especie) VALUES ('{produto_atual}', '{categoria}');"
+                                                insert_statements.append(insert_statement)
+                                                produtos_inseridos.add((produto_atual, categoria))
 
                                     # Salvando os INSERTs em um arquivo .txt para insert
-                                    with open("insert_dimensao_produto2.sql", "w", encoding="utf-8") as file:
+                                    with open("insert_dimensao_produto_final.sql", "a", encoding="utf-8") as file: # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PROGRAMA FUNCIONE SEM PRECISAR TROCAR A DATA #############################################################################################################################################################
                                         for statement in insert_statements:
                                             file.write(statement + "\n")
 
-                                    # print("Arquivo 'inserts.sql' gerado com sucesso!")
-                                    break  # Para na primeira ocorrência
-                                # else:
-                                    # print("A string NÃO foi encontrada!")                        
+                                    insert_statements.clear()  # Limpa a lista de comandos SQL para evitar duplicatas
+                                    break  # Para na primeira ocorrência                       
                     
                 # Verifica se o botão de próxima página está presente e habilitado
-                try:
-                    # Localiza o botão de próxima página pelo XPath
-                    proxima_pagina = WebDriverWait(driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Avançar página']"))
-                    )
-                    
-                    # Verifica se o botão está desabilitado
-                    if "disabled" in proxima_pagina.get_attribute("class"):
-                        print("Fim das páginas.")
-                        break
-
-                    botao_proxima_pagina = driver.find_element(By.XPATH, "//button[@aria-label='Avançar página']")
-                    botao_proxima_pagina.click()
-
-                except Exception as e:
-                    print("Botão de próxima página não encontrado:", e)
-                    break
+                finalizar = False # Flag para finalizar o loop principal caso não encontre mais páginas
+                while True:
+                    try:
+                        proxima_pagina = WebDriverWait(driver, 10).until(
+                            EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Avançar página']"))
+                        )
+                        # Verifica se o botão está desabilitado
+                        if "disabled" in proxima_pagina.get_attribute("class"):
+                            print("Fim das páginas.")
+                            finalizar = True
+                            break
+                        clicar_elemento(By.XPATH, "//button[@aria-label='Avançar página']", descricao="botão de próxima página")
+                        break  # Sai do loop se a ação ocorrer com sucesso
+                    except Exception as e:
+                        print("Erro ao acessar o botão de próxima página:", e)  
+                        time.sleep(5)
+                if finalizar:
+                    break  # Encerra o loop principal se não houver mais páginas
 
                 # Aguarda um tempo adicional para garantir que a página seja carregada
-                time.sleep(2)
+                time.sleep(4)
 
                 # Aguarda até que a nova página seja carregada
                 WebDriverWait(driver, 10).until(
