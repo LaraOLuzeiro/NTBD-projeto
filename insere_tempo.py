@@ -1,6 +1,9 @@
 import pandas as pd
 import psycopg2
+import locale
 
+# Definir o locale para português
+locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
 
 def generate_insert_statements(table_name):
 
@@ -13,7 +16,7 @@ def generate_insert_statements(table_name):
     # Gerar os inserts
     for data in datas:
         mes_numero = data.month  
-        mes_nome = data.strftime("%B")  # Nome do mês 
+        mes_nome = data.strftime("%B").capitalize()   # Nome do mês 
         ano = data.year 
         trimestre = data.quarter 
 
@@ -26,7 +29,7 @@ def generate_insert_statements(table_name):
 
 def insert_data_into_db(table_name):
     # Conexão com o banco de dados PostgreSQL
-    connection_string = "postgresql://postgres:03042004@localhost:5432/Conab_DW"
+    connection_string = "postgresql://postgres:y1u2g3o4@localhost:5432/Conab_DW"
     #connection_string = "postgresql://postgres:lara14ufscar@localhost:5432/Conab_DW"
     
     # Conectando ao banco de dados
@@ -51,10 +54,9 @@ def insert_data_into_db(table_name):
 
 
 if __name__ == "__main__":
-    
-    inserts = generate_insert_statements('Dimensao_Data')
+
 
     # Inserção no banco de dados
-    insert_data_into_db('Dimensao_Local')
+    insert_data_into_db('Dimensao_Tempo')
     
     print("Dados inseridos com sucesso!")

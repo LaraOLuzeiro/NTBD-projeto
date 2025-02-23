@@ -1,4 +1,4 @@
-import time
+import time 
 import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -31,9 +31,9 @@ insert_statements = []
 # Nome da tabela no banco de dados
 table_name = "Dimensao_Produto"
 
-with open("produtos3.csv", "w", newline="", encoding="utf-8") as arquivo:
+with open("produtos2.csv", "w", newline="", encoding="utf-8") as arquivo: #NAO ESQUECER DE MUDAR O NOME DO ARQUIVO, EU MUDEI PRA TESTE SÓ PRA TESTAR UHHRR DUURRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
     writer = csv.writer(arquivo)
-    writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes_ano", "preco_medio"])
+    writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes", "ano", "preco_medio"])
 
     for periodo_mes_inicial, periodo_ano_inicial, periodo_mes_final, periodo_ano_final in periodos:
 
@@ -91,6 +91,37 @@ with open("produtos3.csv", "w", newline="", encoding="utf-8") as arquivo:
                 nivel_atual = None
                 estado_atual = None
 
+                # Dicionário de siglas de UFs para passar UF para o nome completo
+                uf_map = {
+                    'AC': 'Acre',
+                    'AL': 'Alagoas',
+                    'AP': 'Amapá',
+                    'AM': 'Amazonas',
+                    'BA': 'Bahia',
+                    'CE': 'Ceará',
+                    'DF': 'Distrito Federal',
+                    'ES': 'Espírito Santo',
+                    'GO': 'Goiás',
+                    'MA': 'Maranhão',
+                    'MT': 'Mato Grosso',
+                    'MS': 'Mato Grosso do Sul',
+                    'MG': 'Minas Gerais',
+                    'PA': 'Pará',
+                    'PB': 'Paraíba',
+                    'PR': 'Paraná',
+                    'PE': 'Pernambuco',
+                    'PI': 'Piauí',
+                    'RJ': 'Rio de Janeiro',
+                    'RN': 'Rio Grande do Norte',
+                    'RS': 'Rio Grande do Sul',
+                    'RO': 'Rondônia',
+                    'RR': 'Roraima',
+                    'SC': 'Santa Catarina',
+                    'SP': 'São Paulo',
+                    'SE': 'Sergipe',
+                    'TO': 'Tocantins'
+                }
+
                 for resultado in resultados[1:101]:
                     colunas = [coluna.text.strip() for coluna in resultado.find_elements("tag name", "td")]
 
@@ -100,21 +131,34 @@ with open("produtos3.csv", "w", newline="", encoding="utf-8") as arquivo:
                     # Apenas mes_ano e preco_medio, mantém os valores anteriores
                     elif colunas[0] == "" and colunas[1] == "" and colunas[2] == "":
                         mes_ano = colunas[3]
+                        mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
+                        mes = int(mes) # Serve para retirar o zero à esquerda
                         preco_medio = colunas[4]
-                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes_ano, preco_medio])
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
                     # Apenas nivel, estado, mes_ano e preco_medio, mantém o valor do produto
                     elif colunas[0] == "":
                         nivel_atual = colunas[1]
                         estado_atual = colunas[2]
+                        estado_atual = uf_map.get(estado_atual) # Converte a sigla do estado para o nome completo
                         mes_ano = colunas[3]
+                        mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
+                        mes = int(mes) # Serve para retirar o zero à esquerda
                         preco_medio = colunas[4]
-                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes_ano, preco_medio])
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
                     # Nova linha completa, atualiza todos os campos
                     else:
                         produto_atual, nivel_atual, estado_atual, mes_ano, preco_medio = colunas
-                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes_ano, preco_medio])
+                        preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de conversão
+                        mes, ano = mes_ano.split('/')  # Divide a string em duas partes para facilitar inserção na tabela de fatos posteriormente
+                        mes = int(mes) # Serve para retirar o zero à esquerda                       
+                        estado_atual = uf_map.get(estado_atual) # Converte a sigla do estado para o nome completo
+                        writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
+
+                        # Pega todas as categorias existentes no arquivo 'categoria.txt'
                         with open("categoria.txt", "r", encoding="utf-8") as arquivo:
                             for numero_linha, linha in enumerate(arquivo, start=1):
                                 if linha.strip() in produto_atual:
@@ -129,8 +173,8 @@ with open("produtos3.csv", "w", newline="", encoding="utf-8") as arquivo:
                                             insert_statement = f"INSERT INTO {table_name} (nome_produto, cultura_especie) VALUES ('{produto_atual}', '{categoria}');"
                                             insert_statements.append(insert_statement)
 
-                                    # Salvando os INSERTs em um arquivo .txt
-                                    with open("inserts_dimensao_produto.sql", "w", encoding="utf-8") as file:
+                                    # Salvando os INSERTs em um arquivo .txt para insert
+                                    with open("insert_dimensao_produto2.sql", "w", encoding="utf-8") as file:
                                         for statement in insert_statements:
                                             file.write(statement + "\n")
 

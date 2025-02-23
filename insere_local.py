@@ -66,13 +66,13 @@ def generate_insert_statements(df, table_name):
 
 def insert_data_into_db(df, table_name):
     # Conexão com o banco de dados PostgreSQL
-    connection_string = "postgresql://postgres:lara14ufscar@localhost:5432/Conab_DW"
+    connection_string = "postgresql://postgres:y1u2g3o4@localhost:5432/Conab_DW"
     
     # Conectando ao banco de dados
     conn = psycopg2.connect(connection_string)
     cursor = conn.cursor()
 
-    # Gerar os comandos INSERT
+    # Gerar os comandos INSERT  
     insert_statements = generate_insert_statements(df, table_name)
 
     # Executar cada comando INSERT
