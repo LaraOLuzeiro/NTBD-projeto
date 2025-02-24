@@ -2,6 +2,7 @@
 DA CAPTURA DOS DADOS NA WEB. ALÉM DISSO, COMO JÁ TEMOS 165MIL TUPLAS, NÃO SERIA INTERESSANTE RODAR O WEB SCRAPING DO ZERO."""
 
 import csv
+import pandas as pd
 
 # Somente o campo nome_produto possui aspas duplas, então removemos elas e as vírgulas dentro dessas aspas.
 # Por exemplo, "Produto, teste" vira Produto teste.
@@ -21,3 +22,10 @@ def remover_aspas_produtos(arquivo_entrada, arquivo_saida):
 
 if __name__ == '__main__':
     remover_aspas_produtos('produtos_intermediario.csv', 'produtos_final.csv')
+
+    # Removendo linhas duplicadas
+    df = pd.read_csv('produtos_final.csv')
+    df_limpo = df.drop_duplicates(subset=["nome_produto", "nivel_comercializacao", "estado", "mes", "ano"], keep="first")
+    df_limpo.to_csv('produtos_final2.csv', index=False)
+    print(f"Registros antes da remoção: {len(df)}")
+    print(f"Registros depois da remoção: {len(df_limpo)}")
