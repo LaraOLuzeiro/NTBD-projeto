@@ -27,5 +27,3 @@ if __name__ == '__main__':
     df = pd.read_csv('produtos_final.csv')
     df_limpo = df.drop_duplicates(subset=["nome_produto", "nivel_comercializacao", "estado", "mes", "ano"], keep="first")
     df_limpo.to_csv('produtos_final2.csv', index=False)
-    print(f"Registros antes da remoção: {len(df)}")
-    print(f"Registros depois da remoção: {len(df_limpo)}")
