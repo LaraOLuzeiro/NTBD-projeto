@@ -36,8 +36,8 @@ def remove_commas_from_product_name(line):
     return line
 
 # Caminho do arquivo SQL de entrada e saída
-input_file = 'insert_dimensao_produto_final.sql'
-output_file = 'insert_dimensao_produto_corrigido.sql'
+input_file = 'insert_dimensao_produto_intermediario.sql'
+output_file = 'insert_dimensao_produto_final.sql'
 
 # Processar o arquivo diretamente e gerar o arquivo final
 processar_arquivo_sql(input_file, output_file)

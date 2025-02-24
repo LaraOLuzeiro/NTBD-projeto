@@ -210,7 +210,7 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
 
                         # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
                         count += 1
-                        print(f'Produtos Inseridos: {count}/89.995')
+                        print(f'Produtos Inseridos: {count}/65.973')
 
                     # Apenas nivel, estado, mes_ano e preco_medio, mantém o valor do produto
                     elif colunas[0] == "":
@@ -226,7 +226,7 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
 
                         # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
                         count += 1
-                        print(f'Produtos Inseridos: {count}/89.995')
+                        print(f'Produtos Inseridos: {count}/65.973')
 
                     # Nova linha completa, atualiza todos os campos
                     else:
@@ -239,7 +239,7 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
 
                         # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
                         count += 1
-                        print(f'Produtos Inseridos: {count}/89.995')
+                        print(f'Produtos Inseridos: {count}/65.973')
 
                         # Pega todas as categorias existentes no arquivo 'categoria.txt'
                         with open("categoria.txt", "r", encoding="utf-8") as arquivo:
@@ -258,7 +258,7 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
                                                 produtos_inseridos.add((produto_atual, categoria))
 
                                     # Salvando os INSERTs em um arquivo .txt para insert
-                                    with open("insert_dimensao_produto_final.sql", "a", encoding="utf-8") as file: # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PROGRAMA FUNCIONE SEM PRECISAR TROCAR A DATA #############################################################################################################################################################
+                                    with open("insert_dimensao_produto_intermediario.sql", "a", encoding="utf-8") as file: # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PROGRAMA FUNCIONE SEM PRECISAR TROCAR A DATA #############################################################################################################################################################
                                         for statement in insert_statements:
                                             file.write(statement + "\n")
 
