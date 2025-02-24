@@ -26,4 +26,5 @@ if __name__ == '__main__':
     # Removendo linhas duplicadas
     df = pd.read_csv('produtos_final.csv')
     df_limpo = df.drop_duplicates(subset=["nome_produto", "nivel_comercializacao", "estado", "mes", "ano"], keep="first")
+    
     df_limpo.to_csv('produtos_final2.csv', index=False)

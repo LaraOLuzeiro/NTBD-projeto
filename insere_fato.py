@@ -28,8 +28,6 @@ try:
 
         next(leitor) # Pula a primeira linha (cabeçalho)
 
-        linha_numero = 1
-
         # Iterar sobre as linhas do arquivo
         for linha in leitor:
 
@@ -39,18 +37,38 @@ try:
             mes = linha[3]
             ano = linha[4]
             preco_medio = linha[5]
+        #     cursor.execute("""
+        #     INSERT INTO Fato_Cotacao (pk_produto, pk_tempo, pk_comercializacao, pk_local, preco)
+        #     SELECT pk_produto, pk_tempo, %s, pk_local, %s
+        #     FROM Dimensao_Produto dp
+        #     JOIN Dimensao_Local dl ON (dl.estado = %s)
+        #     JOIN Dimensao_Tempo dt ON (dt.mes = %s) AND (dt.ano = %s)
+        #     WHERE dp.nome_produto = %s
+        # """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
+        #     conn.commit()  # Salva as alterações
             cursor.execute("""
-            INSERT INTO Fato_Cotacao (pk_produto, pk_tempo, pk_comercializacao, pk_local, preco)
-            SELECT pk_produto, pk_tempo, %s, pk_local, %s
-            FROM Dimensao_Produto dp
-            JOIN Dimensao_Local dl ON (dl.estado = %s)
-            JOIN Dimensao_Tempo dt ON (dt.mes = %s) AND (dt.ano = %s)
-            WHERE dp.nome_produto = %s
-        """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
-            conn.commit()  # Salva as alterações
+                SELECT dp.pk_produto, dt.pk_tempo, dl.pk_local
+                FROM Dimensao_Produto dp
+                JOIN Dimensao_Local dl ON dl.estado = %s
+                JOIN Dimensao_Tempo dt ON dt.mes = %s AND dt.ano = %s
+                WHERE dp.nome_produto = %s
+            """, (estado, mes, ano, nome_produto))
 
-            print(f"Processando linha {linha_numero}")
-            linha_numero += 1
+            resultado = cursor.fetchone()
+            if resultado is None:
+                print(f"Erro: Produto={nome_produto}, Estado={estado}, Mês={mes}, Ano={ano} não encontrado")
+                continue
+            else:
+                cursor.execute("""
+                    INSERT INTO Fato_Cotacao (pk_produto, pk_tempo, pk_comercializacao, pk_local, preco)
+                    SELECT pk_produto, pk_tempo, %s, pk_local, %s
+                    FROM Dimensao_Produto dp
+                    JOIN Dimensao_Local dl ON (dl.estado = %s)
+                    JOIN Dimensao_Tempo dt ON (dt.mes = %s) AND (dt.ano = %s)
+                    WHERE dp.nome_produto = %s
+                """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
+                conn.commit()
+
 
 except Exception as e:
     print(f"Erro ao conectar ao banco de dados: {e}")
