@@ -23,7 +23,11 @@ def remover_aspas_produtos(arquivo_entrada, arquivo_saida):
 if __name__ == '__main__':
     remover_aspas_produtos('produtos_intermediario.csv', 'produtos_final.csv')
 
-    # Removendo linhas duplicadas
     df = pd.read_csv('produtos_final.csv')
+
+    # Filtra para remover cabeçalhos repetidos, mantendo apenas a primeira ocorrência
+    df = pd.concat([df.iloc[:1], df.iloc[1:][df.iloc[1:, 0] != "nome_produto"]])
+    
+    # Removendo linhas duplicadas
     df_limpo = df.drop_duplicates(subset=["nome_produto", "nivel_comercializacao", "estado", "mes", "ano"], keep="first")
     df_limpo.to_csv('produtos_final.csv', index=False)
