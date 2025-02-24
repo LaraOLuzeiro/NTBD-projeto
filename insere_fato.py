@@ -5,7 +5,7 @@ import csv
 host = "localhost"
 database = "Conab_DW"
 user = "postgres"
-password = "y1u2g3o4"
+password = "lara14ufscar"
 port = "5432"  # Porta padrão do PostgreSQL
 
 # Conectar ao banco de dados
@@ -23,10 +23,12 @@ try:
 
     # Ler arquivo CSV que contém os dados brutos e puxar os dados das
     # Dimensões para inserir na tabela de fato
-    with open('produtos_final.csv', 'r', encoding='utf-8') as arquivo_csv:
+    with open('produtos_final2.csv', 'r', encoding='utf-8') as arquivo_csv:
         leitor = csv.reader(arquivo_csv)
 
         next(leitor) # Pula a primeira linha (cabeçalho)
+
+        linha_numero = 1
 
         # Iterar sobre as linhas do arquivo
         for linha in leitor:
@@ -46,6 +48,9 @@ try:
             WHERE dp.nome_produto = %s
         """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
             conn.commit()  # Salva as alterações
+
+            print(f"Processando linha {linha_numero}")
+            linha_numero += 1
 
 except Exception as e:
     print(f"Erro ao conectar ao banco de dados: {e}")
