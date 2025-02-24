@@ -2,7 +2,7 @@
 
 CREATE TABLE Dimensao_Produto(
 	PK_produto SERIAL PRIMARY KEY,
-	nome_produto VARCHAR(100),
+	nome_produto VARCHAR(200),
 	cultura_especie VARCHAR(100)
 );
 
