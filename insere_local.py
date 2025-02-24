@@ -66,7 +66,7 @@ def generate_insert_statements(df, table_name):
 
 def insert_data_into_db(df, table_name):
     # Conexão com o banco de dados PostgreSQL
-    connection_string = "postgresql://postgres:y1u2g3o4@localhost:5432/Conab_DW"
+    connection_string = "postgresql://postgres:SUA_SENHA@localhost:5432/Conab_DW"
     
     # Conectando ao banco de dados
     conn = psycopg2.connect(connection_string)
@@ -88,13 +88,10 @@ def insert_data_into_db(df, table_name):
     cursor.close()
     conn.close()
 
-
 if __name__ == "__main__":
     # Scrape dos dados
     df = scrape_ibge_states()
 
-    print(df.head())  # Exibir as primeiras linhas do DataFrame
-    
     # Inserção no banco de dados
     insert_data_into_db(df, 'Dimensao_Local')
     

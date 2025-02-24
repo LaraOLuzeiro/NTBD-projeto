@@ -51,11 +51,13 @@ carregar_pagina('https://consultaprecosdemercado.conab.gov.br/#/home')
 # Seleciona preços mensais
 clicar_elemento(By.XPATH, "//button[.//i[contains(@class, 'fa-th-large')]]", descricao="botão de preços mensais")
 
-# Selecionando períodos para consultar
+"""NO TRECHO ABAIXO, A IDEIA ERA O SELENIUM AUTOMCATICAMENTE SELECIONAR OS MESES E ANOS, APÓS A PRIMEIRA ITERAÇÃO, NO ENTANTO, NÕ CONSEGUIMOS
+FAZER RODAR DE FORMA CORRETA POR CONTA DO TEMPO. ENTÃO, NO MOMENTO DE RODAR O PROGRAMA, O USUÁRIO DEVE SELECIONAR OS MESES E ANOS MANUALMENTE, 
+DEXANDO DESCOMENTADO APENAS O PERÍODO DESEJADO PARA A COLETA DE DADOS"""
 periodos = [
-    #(0, 11, 11, 8),  # Jan/2014 - Dez/2017 # COMENTEI AQUI PARA PEGAR A PROXIMA DATA, ALTERAR DEPOIS ##############################################################################################################################
-    #(0, 7, 11, 4),   # Jan/2018 - Dez/2021 # COMENTEI AQUI PARA PEGAR A PROXIMA DATA, ALTERAR DEPOIS ##############################################################################################################################
-    (0, 3, 0, 0)   # Jan/2022 - Jan/2025
+    (0, 11, 11, 8),  # Jan/2014 - Dez/2017 
+    #(0, 7, 11, 4),   # Jan/2018 - Dez/2021 
+    #(0, 3, 0, 0)   # Jan/2022 - Jan/2025
 ]
 
 # Lista para armazenar os comandos SQL
@@ -67,10 +69,11 @@ table_name = "Dimensao_Produto"
 # Conjunto auxiliar para verificar e evitar inserções duplicadas no arquivo de insert de produtos
 produtos_inseridos = set() 
 
-count = 0 # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS ########################################################################################################################################################################################################################################################################################################################
+# Contador para ver o progresso da coleta dos produtos
+count_produtos = 0 
 
-
-# APAGAR ISSO, FOI NECESSÁRIO PARA REPREENCHER A TABELA DE PRODUTOS, POIS TIVE QUE REINICIAR O PROGRAMA, MAS NÃO SERÁ NECESSÁRIO PARA O PROJETO FINAL SE ELE CONSEGUIR FAZER A TROCA DE DATA SOZINHO ###################################################################################################################
+"""COMO É NECESSÁRIO EXECUTAR TRÊS VEZES O PROGRAMA COM OS DETERMINADOS PERIODOS DE TEMPO, ENTÃO É PRECISO PEGAR OS DADOS JÁ EXISTENTES
+PARA EVITAR DUPLICIDADE DE DADOS. O CÓDIGO ABAIXO FAZ ESSA VERIFICAÇÃO DOS DADOS EXISTENTES"""
 import os 
 import re
 if os.path.exists("insert_dimensao_produto_final.sql"):
@@ -83,12 +86,11 @@ if os.path.exists("insert_dimensao_produto_final.sql"):
                 produtos_inseridos.add((produto, categoria))
                 print(produto, categoria)
 
-#########################################################################################################################################################################################################################################################################################################################################################################################################
-
-
-with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as arquivo:  # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PRGORAMA FUNCIONE SEM PRECISAR TROCAR A DATA #######################################################################################################################################################################################################
+# Retirada de dados do Conab fazendo alguns procedimentos de limpeza e transformação. 
+# Inserção em arquivos intermediários para posterior tratamento final
+with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as arquivo:  
     writer = csv.writer(arquivo)
-    #writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes", "ano", "preco_medio"]) # DESCOMENTAR AQUI, POIS ESTAVA INSERINDO NOVAMENTE O CABEÇALHO, JÁ QUE TIVE QUE REINICIAR O PROGRAMA ##########################################################################################################################################################################################
+    writer.writerow(["nome_produto", "nivel_comercializacao", "estado", "mes", "ano", "preco_medio"]) 
 
     for periodo_mes_inicial, periodo_ano_inicial, periodo_mes_final, periodo_ano_final in periodos:
 
@@ -208,9 +210,8 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
                         preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de compatibilidade com o PostgreSQL
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
-                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
-                        count += 1
-                        print(f'Produtos Inseridos: {count}/65.973')
+                        count_produtos += 1
+                        print(f'Produtos Inseridos: {count_produtos}')
 
                     # Apenas nivel, estado, mes_ano e preco_medio, mantém o valor do produto
                     elif colunas[0] == "":
@@ -224,9 +225,8 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
                         preco_medio = preco_medio.replace(',', '.')  # Substitui a vírgula por ponto para evitar problemas de compatibilidade com o PostgreSQL
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
-                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
-                        count += 1
-                        print(f'Produtos Inseridos: {count}/65.973')
+                        count_produtos += 1
+                        print(f'Produtos Inseridos: {count_produtos}')
 
                     # Nova linha completa, atualiza todos os campos
                     else:
@@ -237,9 +237,8 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
                         estado_atual = uf_map.get(estado_atual) # Converte a sigla do estado para o nome completo
                         writer.writerow([produto_atual, nivel_atual, estado_atual, mes, ano, preco_medio])
 
-                        # SÓ PARA VER O PROGRESSO, APAAGR DEPOIS #################################################################################################################################################################################################################################################################################
-                        count += 1
-                        print(f'Produtos Inseridos: {count}/65.973')
+                        count_produtos += 1
+                        print(f'Produtos Inseridos: {count_produtos}/')
 
                         # Pega todas as categorias existentes no arquivo 'categoria.txt'
                         with open("categoria.txt", "r", encoding="utf-8") as arquivo:
@@ -257,8 +256,8 @@ with open("produtos_intermediario.csv", "a", newline="", encoding="utf-8") as ar
                                                 insert_statements.append(insert_statement)
                                                 produtos_inseridos.add((produto_atual, categoria))
 
-                                    # Salvando os INSERTs em um arquivo .txt para insert
-                                    with open("insert_dimensao_produto_intermediario.sql", "a", encoding="utf-8") as file: # ALTEREI DE WRITE PARA APPEND, TROCAR ISSO DEPOIS PARA 'w' CASO O PROGRAMA FUNCIONE SEM PRECISAR TROCAR A DATA #############################################################################################################################################################
+                                    # Salvando os INSERTs em um arquivo .txt para insert posterior
+                                    with open("insert_dimensao_produto_intermediario.sql", "a", encoding="utf-8") as file: 
                                         for statement in insert_statements:
                                             file.write(statement + "\n")
 

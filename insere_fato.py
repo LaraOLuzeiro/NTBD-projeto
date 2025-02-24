@@ -5,7 +5,7 @@ import csv
 host = "localhost"
 database = "Conab_DW"
 user = "postgres"
-password = "lara14ufscar"
+password = "SUA_SENHA"  # Senha do banco de dados
 port = "5432"  # Porta padrão do PostgreSQL
 
 # Conectar ao banco de dados
@@ -23,7 +23,7 @@ try:
 
     # Ler arquivo CSV que contém os dados brutos e puxar os dados das
     # Dimensões para inserir na tabela de fato
-    with open('produtos_final2.csv', 'r', encoding='utf-8') as arquivo_csv:
+    with open('produtos_final.csv', 'r', encoding='utf-8') as arquivo_csv:
         leitor = csv.reader(arquivo_csv)
 
         next(leitor) # Pula a primeira linha (cabeçalho)
@@ -37,15 +37,6 @@ try:
             mes = linha[3]
             ano = linha[4]
             preco_medio = linha[5]
-        #     cursor.execute("""
-        #     INSERT INTO Fato_Cotacao (pk_produto, pk_tempo, pk_comercializacao, pk_local, preco)
-        #     SELECT pk_produto, pk_tempo, %s, pk_local, %s
-        #     FROM Dimensao_Produto dp
-        #     JOIN Dimensao_Local dl ON (dl.estado = %s)
-        #     JOIN Dimensao_Tempo dt ON (dt.mes = %s) AND (dt.ano = %s)
-        #     WHERE dp.nome_produto = %s
-        # """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
-        #     conn.commit()  # Salva as alterações
             cursor.execute("""
                 SELECT dp.pk_produto, dt.pk_tempo, dl.pk_local
                 FROM Dimensao_Produto dp
@@ -56,7 +47,6 @@ try:
 
             resultado = cursor.fetchone()
             if resultado is None:
-                print(f"Erro: Produto={nome_produto}, Estado={estado}, Mês={mes}, Ano={ano} não encontrado")
                 continue
             else:
                 cursor.execute("""
@@ -69,10 +59,9 @@ try:
                 """, (nivel_comercializacao, preco_medio, estado, mes, ano, nome_produto))
                 conn.commit()
 
-
 except Exception as e:
     print(f"Erro ao conectar ao banco de dados: {e}")
 finally:
-    # Certifique-se de fechar a conexão
     cursor.close()
     conn.close()
+    print("Dados inseridos com sucesso!")
