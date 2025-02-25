@@ -9,9 +9,9 @@ CREATE TABLE Dimensao_Produto(
 CREATE TABLE Dimensao_Tempo(
 	PK_tempo SERIAL PRIMARY KEY,
 	mes INT NOT NULL,
-	ano INT NOT NULL,
+	mes_por_extenso VARCHAR(100),
 	trimestre INT NULL, 
-	mes_por_extenso VARCHAR(100)
+	ano INT NOT NULL
 );
 
 CREATE TABLE Dimensao_Local(
