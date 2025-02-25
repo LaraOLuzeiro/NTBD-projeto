@@ -8,7 +8,7 @@ conn = psycopg2.connect(
 	host = "localhost",
 	database = "Conab_DW",
 	user = "postgres",
-	password = "lara14ufscar",  # Senha do banco de dados
+	password = "y1u2g3o4",  # Senha do banco de dados
 	port = "5432"  # Porta padrão do PostgreSQL
 )
 
@@ -50,7 +50,7 @@ plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.show()
 
 # RENAN
-# Qual a média dos preços do ABACAXI HAVAÍ (kg) ao longo dos anos no estado do Paraná
+# Qual a média dos preços do ABACAXI HAVAÍ (kg) ao longo dos anos no estado do Paraná, com nível de comercialização sendo PRODUTOR?
 
 query_renan = """
 SELECT dt.ano, AVG(fc.preco) AS preco_medio
@@ -59,6 +59,7 @@ JOIN Dimensao_Tempo dt ON fc.PK_tempo = dt.PK_tempo
 JOIN Dimensao_Produto dp ON fc.PK_produto = dp.PK_produto
 JOIN Dimensao_Local dl ON fc.PK_local = dl.PK_local
 WHERE dp.nome_produto = 'ABACAXI HAVAÍ (kg)' AND dl.estado = 'Paraná'
+AND PK_comercializacao = 'PRODUTOR'
 GROUP BY dt.ano
 ORDER BY dt.ano;
 """
@@ -67,7 +68,7 @@ ORDER BY dt.ano;
 df_renan = pd.read_sql(query_renan, conn)
 
 # Criação do gráfico
-plt.figure(figsize=(20, 10))
+plt.figure(figsize=(10, 5))
 plt.plot(df_renan["ano"], df_renan["preco_medio"], marker='o', linestyle='-', color='b')
 
 # Configurações do gráfico
