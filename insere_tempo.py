@@ -55,6 +55,6 @@ def inserir_bd(table_name):
 if __name__ == "__main__":
 
     # Inserção no banco de dados
-    insere_bd('Dimensao_Tempo')
+    inserir_bd('Dimensao_Tempo')
     
     print("Dados inseridos com sucesso!")
