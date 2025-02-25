@@ -52,7 +52,7 @@ def inserts(df, table_name):
 
     # Itera sobre as linhas do DataFrame
     for index, row in df.iterrows():
-        # Cria a lista de valores a serem inseridos
+        # Cria a lista de valores a serem inseridos a partir do dataframe
         values = ', '.join([f"'{str(value)}'" for value in row])
         
         # Cria o comando INSERT INTO
