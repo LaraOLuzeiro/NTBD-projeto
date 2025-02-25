@@ -8,13 +8,13 @@ conn = psycopg2.connect(
 	host = "localhost",
 	database = "Conab_DW",
 	user = "postgres",
-	#password = "y1u2g3o4",  # Senha do banco de dados
+	password = "lara14ufscar",  # Senha do banco de dados
 	port = "5432"  # Porta padrão do PostgreSQL
 )
 
 #Daniella
 
-#Selecione o maior preco da BANANA PRATA (kg) em cada estado da regiao Nordeste durante o ano de 2017 com o nivel de comercialização ATACADO
+#Selecione o maior e o menor preco da BANANA PRATA (kg) em cada estado da regiao Nordeste durante o ano de 2017 com o nivel de comercialização ATACADO
 
 query_daniella = """
 SELECT estado, MAX(preco) AS maior_preco, MIN(preco) AS menor_preco
@@ -75,6 +75,37 @@ plt.xlabel("Ano")
 plt.ylabel("Preço Médio (R$)")
 plt.title("Evolução do Preço do Abacaxi Havaí (kg) no Paraná")
 plt.grid(True)
+
+# Exibir o gráfico
+plt.show()
+
+
+# Lara
+# Qual a média de preços de MANGA PALMER (kg) para cada mês do ano, considerando todos os anos disponíveis? O resultado deve conter o número do mês, o nome do mês e a média de preços naquele mês.
+
+query_lara = """
+SELECT mes, mes_por_extenso, AVG(preco) AS media_preco
+FROM fato_cotacao NATURAL JOIN dimensao_tempo NATURAL JOIN dimensao_produto
+WHERE nome_produto = 'MANGA PALMER (kg)'
+GROUP BY mes, mes_por_extenso
+ORDER BY mes;
+"""
+
+# Executar a consulta e carregar os dados em um DataFrame
+df_lara = pd.read_sql(query_lara, conn)
+
+# Cores
+meses_especiais = ['Novembro', 'Dezembro', 'Janeiro']
+cores = ["#33FFF3" if mes in meses_especiais else "#FF5733" for mes in df_lara["mes_por_extenso"]]
+
+# Criar o gráfico de barras agrupadas
+plt.figure(figsize=(12, 6))
+plt.bar(df_lara["mes_por_extenso"], df_lara["media_preco"], color=cores)
+
+# Configurações do gráfico
+plt.xlabel("Mês")
+plt.ylabel("Preço Médio (R$)")
+plt.title("Média de preços da Manga Palmer (kg) por mês")
 
 # Exibir o gráfico
 plt.show()
