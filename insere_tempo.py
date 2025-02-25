@@ -10,7 +10,7 @@ def insert_tempo(table_name):
     # Lista para armazenar os comandos SQL
     inserts = []
 
-    # Criar uma sequência de datas de janeiro de 2014 até janeiro de 2025
+    # Criar uma sequência de datas de janeiro de 2000 até fevereiro de 2025
     datas = pd.date_range(start="2000-01", end="2025-02", freq="MS")  # 'MS' = Start of Month
 
     # Gerar os inserts
@@ -27,15 +27,16 @@ def insert_tempo(table_name):
     return inserts
 
 
-def insere_bd(table_name):
+#Função que insere os scripts de INSERT no banco de dados
+def inserir_bd(table_name):
     # Conexão com o banco de dados PostgreSQL
     connection_string = "postgresql://postgres:SUA_SENHA@localhost:5432/Conab_DW"
-
+    
     # Conectando ao banco de dados
     conn = psycopg2.connect(connection_string)
     cursor = conn.cursor()
 
-    # Gerar os comandos INSERT
+    # Gerar os comandos INSERT  
     inserts = insert_tempo(table_name)
 
     # Executar cada comando INSERT
@@ -47,7 +48,7 @@ def insere_bd(table_name):
             print(f"Erro ao inserir dados: {e}")
             conn.rollback()  # Desfaz a transação em caso de erro
 
-    # Fechar a conexão
+    # Fecha a conexão
     cursor.close()
     conn.close()
 

@@ -76,9 +76,9 @@ def inserir_bd(df, table_name):
     insert = inserts(df, table_name)
 
     # Executar cada comando INSERT
-    for statement in insert:
+    for i in insert:
         try:
-            cursor.execute(statement)
+            cursor.execute(i)
             conn.commit()  # Confirma a transação
         except Exception as e:
             print(f"Erro ao inserir dados: {e}")
