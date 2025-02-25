@@ -45,7 +45,7 @@ def scraper_ibge():
     df = pd.DataFrame(estados)
     return df
 
-# Função para inserir os dados no banco de dados
+# Função que faz o script dos inserts
 def inserts(df, table_name):
     # Lista para armazenar os comandos INSERT
     inserts = []
@@ -63,6 +63,7 @@ def inserts(df, table_name):
     
     return inserts
 
+#Função que insere os scripts de INSERT no banco de dados
 def inserir_bd(df, table_name):
     # Conexão com o banco de dados PostgreSQL
     connection_string = "postgresql://postgres:SUA_SENHA@localhost:5432/Conab_DW"
