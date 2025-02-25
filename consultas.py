@@ -1,15 +1,53 @@
 import pandas as pd
 import psycopg2
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Conexão com o banco de dados
 conn = psycopg2.connect(
 	host = "localhost",
 	database = "Conab_DW",
 	user = "postgres",
-	password = "y1u2g3o4",  # Senha do banco de dados
+	#password = "y1u2g3o4",  # Senha do banco de dados
 	port = "5432"  # Porta padrão do PostgreSQL
 )
+
+#Daniella
+
+#Selecione o maior preco da BANANA PRATA (kg) em cada estado da regiao Nordeste durante o ano de 2017 com o nivel de comercialização ATACADO
+
+query_daniella = """
+SELECT estado, MAX(preco) AS maior_preco, MIN(preco) AS menor_preco
+FROM fato_cotacao NATURAL JOIN Dimensao_tempo NATURAL JOIN dimensao_local NATURAL JOIN dimensao_produto
+WHERE nome_produto = 'BANANA PRATA (kg)' AND regiao = 'Nordeste' AND ano = 2017 AND pk_comercializacao = 'ATACADO'
+GROUP BY PK_produto, PK_local, estado;
+"""
+
+# Executar a consulta e carregar os dados em um DataFrame
+df_daniella = pd.read_sql(query_daniella, conn)
+
+# Criar uma posição para cada estado no eixo X
+estados = df_daniella["estado"]
+x = np.arange(len(estados))
+
+# Largura das barras
+largura = 0.4  
+
+# Criar o gráfico de barras agrupadas
+plt.figure(figsize=(12, 6))
+plt.bar(x - largura/2, df_daniella["maior_preco"], largura, label="Maior Preço", color="royalblue")
+plt.bar(x + largura/2, df_daniella["menor_preco"], largura, label="Menor Preço", color="lightcoral")
+
+# Configurações do gráfico
+plt.xlabel("Estado")
+plt.ylabel("Preço (R$)")
+plt.title("Maior e Menor Preço da Banana Prata (kg) no Nordeste em 2017")
+plt.xticks(ticks=x, labels=estados, rotation=45)  # Ajustar rótulos dos estados
+plt.legend()
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+
+# Exibir o gráfico
+plt.show()
 
 # RENAN
 # Qual a média dos preços do ABACAXI HAVAÍ (kg) ao longo dos anos no estado do Paraná
@@ -41,22 +79,4 @@ plt.grid(True)
 # Exibir o gráfico
 plt.show()
 
-
-"""
---Daniella
-
--- Quantos porcento caiu o preço da CARNE BOVINA DIANTEIRO COM OSSO (15 kg) no Amazonas de fevereiro de 2023 para outubro de 2023?
-SELECT distinct nome_produto, estado, ROUND(((SELECT preco FROM preco_fevereiro_e_outubro WHERE mes_por_extenso = 'Outubro') * 100 / (SELECT preco FROM preco_fevereiro_e_outubro WHERE mes_por_extenso = 'Fevereiro')) :: NUMERIC, 2) AS porcentagem
-from preco_fevereiro_e_outubro
-
-CREATE OR REPLACE VIEW preco_fevereiro_e_outubro(nome_produto, estado, mes_por_extenso, ano, preco) AS
-	SELECT nome_produto, estado, mes_por_extenso, ano, preco
-	FROM fato_cotacao NATURAL JOIN Dimensao_tempo NATURAL JOIN dimensao_local NATURAL JOIN dimensao_produto
-	WHERE nome_produto = 'CARNE BOVINA DIANTEIRO COM OSSO (15 kg)' AND estado = 'Amazonas' AND ano = 2023 AND mes_por_extenso = 'Fevereiro' 
-	UNION  
-	SELECT nome_produto, estado, mes_por_extenso, ano, preco
-	FROM fato_cotacao NATURAL JOIN Dimensao_tempo NATURAL JOIN dimensao_local NATURAL JOIN dimensao_produto
-	WHERE nome_produto = 'CARNE BOVINA DIANTEIRO COM OSSO (15 kg)' AND estado = 'Amazonas' AND ano = 2023 AND mes_por_extenso = 'Outubro';
-
-"""
 conn.close()
